@@ -84,7 +84,19 @@ docker-compose up -d --build
 ```
 The application will be available at `http://localhost:8080`.
 
-### 3. Using the Sandbox
+### 3. TailwindCSS Compilation
+The project uses TailwindCSS v4 with JIT compilation via `pnpm`. To build or watch for CSS changes:
+
+```bash
+# One-time build
+pnpm run build:css
+
+# Watch mode for development
+pnpm run watch:css
+```
+The compiled CSS will be generated at `public/assets/css/main.css`.
+
+### 4. Using the Sandbox
 Navigate to `/preview` to access the Live Preview Sandbox, where you can prompt the AI agent or manually edit PHP/Tailwind templates with instant hot-reloading.
 
 ---

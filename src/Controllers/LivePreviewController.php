@@ -31,7 +31,7 @@ class LivePreviewController
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BARE-WP Live Preview Sandbox</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/css/main.css">
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col md:flex-row p-4 gap-4">
     <div class="flex-1 flex flex-col bg-white p-4 rounded shadow">
@@ -133,7 +133,7 @@ HTML;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Preview Render</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/css/main.css">
 </head>
 <body>
     {$code}

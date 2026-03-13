@@ -40,8 +40,9 @@ $router->post('/preview/render', [\BareWP\Controllers\LivePreviewController::cla
 
 // A basic home route for testing
 $router->get('/', function() {
-    echo "<h1>BARE-WP Frontend Engine</h1>";
-    echo "<p>WordPress Core is loaded headlessly. Themes are bypassed.</p>";
+    echo "<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'><title>BARE-WP</title><link rel='stylesheet' href='/assets/css/main.css'></head><body class='bg-gray-100 p-8'>";
+    echo "<h1 class='text-3xl font-bold mb-4'>BARE-WP Frontend Engine</h1>";
+    echo "<p class='mb-2'>WordPress Core is loaded headlessly. Themes are bypassed.</p>";
     if (function_exists('get_bloginfo')) {
         echo "<p>Connected to backend: <strong>" . esc_html(get_bloginfo('name')) . "</strong></p>";
     }
