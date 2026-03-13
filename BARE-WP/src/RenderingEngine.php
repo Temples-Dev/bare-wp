@@ -36,6 +36,11 @@ class RenderingEngine
             throw new Exception("Template not found or invalid path: {$templatePath}");
         }
 
+        // If it's an HTML file, read it directly without PHP execution
+        if (pathinfo($fullPath, PATHINFO_EXTENSION) === 'html') {
+            return file_get_contents($fullPath);
+        }
+
         // Extract variables into current scope so the template can use them
         extract($data, EXTR_SKIP);
 
