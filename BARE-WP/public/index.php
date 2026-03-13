@@ -12,7 +12,7 @@ define('WP_USE_THEMES', false);
 
 // 2. Define custom content directory if needed, to point away from the WP core
 // define('WP_CONTENT_DIR', dirname(__DIR__) . '/public/content');
-// define('WP_CONTENT_URL', 'http://' . $_SERVER['HTTP_HOST'] . '/content');
+// define('WP_CONTENT_URL', WP_HOME . '/content'); // Use WP_HOME or a trusted constant to prevent host header injection
 
 // 3. Load Composer Autoloader for the custom PHP UI engine
 if (file_exists(dirname(__DIR__) . '/vendor/autoload.php')) {
@@ -25,7 +25,9 @@ if (file_exists($wp_bootstrap_path)) {
     require $wp_bootstrap_path;
 } else {
     // Graceful fallback if WP is not yet installed or mapped
-    die('WordPress Core not found. Please ensure it is installed in public/wp/.');
+    error_log('WordPress Core bootstrap file not found at ' . $wp_bootstrap_path);
+    http_response_code(503);
+    die('Service Unavailable.');
 }
 
 // 5. Initialize the Custom PHP UI Application
