@@ -2,6 +2,8 @@
 
 namespace BareWP\Controllers;
 
+use BareWP\Deployment\Deployer;
+
 class TemplateController
 {
     private string $templateDir;
@@ -68,6 +70,38 @@ class TemplateController
             wp_send_json_success(['name' => $name, 'message' => 'Template saved successfully']);
         } else {
             wp_send_json_error('Failed to save template');
+        }
+    }
+
+    /**
+     * Deploy a template to a live route.
+     */
+    public function deploy(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Unauthorized', 403);
+        }
+
+        $nonce = $_POST['_csrf'] ?? '';
+        if (!wp_verify_nonce($nonce, 'live_preview_render')) {
+            wp_send_json_error('Invalid CSRF token', 403);
+        }
+
+        $route = $_POST['route'] ?? '';
+        $templateName = $_POST['name'] ?? '';
+        $code = $_POST['code'] ?? '';
+
+        if (empty($route) || empty($templateName) || empty($code)) {
+            wp_send_json_error('Missing required fields for deployment');
+        }
+
+        $deployer = new Deployer();
+        $result = $deployer->deploy($route, $templateName, $code);
+
+        if ($result[0]) {
+            wp_send_json_success(['message' => $result[1]]);
+        } else {
+            wp_send_json_error($result[1]);
         }
     }
 }

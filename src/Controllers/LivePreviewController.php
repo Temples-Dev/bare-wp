@@ -47,8 +47,11 @@ class LivePreviewController
             <span id="current-filename" class="text-sm text-slate-400 font-mono italic">untitled.html</span>
         </div>
         <div class="flex items-center gap-4">
-            <button onclick="saveTemplate()" class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold py-2 px-4 rounded transition-all">
-                Save to Environment
+            <button onclick="saveTemplate()" class="bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold py-2 px-4 rounded transition-all">
+                Save
+            </button>
+            <button onclick="deployToLive()" class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold py-2 px-4 rounded transition-all">
+                Deploy to Live
             </button>
         </div>
     </header>
@@ -174,6 +177,39 @@ class LivePreviewController
             } else {
                 alert('Save failed: ' + result.data);
             }
+        }
+
+        async function deployToLive() {
+            let route = prompt('Enter live route (e.g., /home or /landing):');
+            if (!route) return;
+
+            let name = activeTemplate || prompt('Enter layout name for storage:');
+            if (!name) return;
+
+            const code = editor.getValue();
+            const formData = new FormData();
+            formData.append('route', route);
+            formData.append('name', name);
+            formData.append('code', code);
+            formData.append('_csrf', '{$csrf_nonce}');
+
+            document.getElementById('status-indicator').innerText = 'Deploying...';
+
+            const resp = await fetch('/api/templates/deploy', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await resp.json();
+            if (result.success) {
+                alert('Success: ' + result.data.message);
+                loadTemplates();
+                activeTemplate = result.data.name || name;
+                document.getElementById('current-filename').innerText = activeTemplate;
+            } else {
+                alert('Deployment Failed: ' + result.data);
+            }
+            document.getElementById('status-indicator').innerText = 'Ready';
         }
 
         function createNew() {

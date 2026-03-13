@@ -77,8 +77,44 @@ class Router
             }
         }
 
+        // Try to match dynamic template routes from config/routes.json
+        if ($this->dispatchDynamicRoute($parsedUri, $method)) {
+            return;
+        }
+
         // If no route matched, return a 404
         $this->abort(404, 'Page Not Found');
+    }
+
+    /**
+     * Attempts to dispatch a dynamic template route.
+     * 
+     * @param string $uri
+     * @param string $method
+     * @return bool
+     */
+    protected function dispatchDynamicRoute(string $uri, string $method): bool
+    {
+        if ($method !== 'GET') return false;
+
+        $routesPath = dirname(__DIR__) . '/config/routes.json';
+        if (!file_exists($routesPath)) return false;
+
+        $config = json_decode(file_get_contents($routesPath), true);
+        if (!isset($config['routes'][$uri])) return false;
+
+        $template = $config['routes'][$uri]['template'];
+        $templateDir = dirname(__DIR__) . '/Views/Templates';
+        
+        try {
+            $engine = new RenderingEngine($templateDir);
+            echo $engine->render($template);
+            return true;
+        } catch (\Throwable $e) {
+            $this->abort(500, "Template Rendering Error: " . $e->getMessage());
+        }
+
+        return false;
     }
 
     /**
