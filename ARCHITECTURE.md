@@ -11,7 +11,7 @@ This architecture allows us to use WordPress's robust data management and admin 
 The system is decoupled into two primary layers:
 
 1. **Backend Engine (WordPress Core):**
-   - Installed in a dedicated, isolated directory (`/public/wp/`).
+   - Installed in a dedicated, isolated directory (`/public/wp-core/`).
    - Handles the administrative interface (`/wp-admin`), user authentication, content creation, and media management.
    - Provides a rich set of data access APIs (PHP functions, hooks, WP_Query, REST API).
    - Bypasses the traditional frontend rendering (no active "theme" is loaded by our custom frontend).
@@ -32,7 +32,7 @@ BARE-WP/
 │   └── wp-config.php       # Custom wp-config.php located outside the WP core folder
 ├── public/                 # The web document root
 │   ├── index.php           # Custom frontend entry point (bypasses WP themes)
-│   └── wp/                 # Unmodified WordPress Core files (updated via WP CLI or dashboard)
+│   └── wp-core/            # Unmodified WordPress Core files (updated via WP CLI or dashboard)
 │       ├── wp-admin/
 │       ├── wp-includes/
 │       └── wp-content/     # Contains MU-plugins or headless-specific plugins if absolutely necessary
@@ -46,8 +46,8 @@ BARE-WP/
 ```
 
 ### Protection of Core Files
-- WordPress is kept entirely within `public/wp/`. We do not edit any file inside this directory.
-- `wp-config.php` is moved outside of the `public/wp/` directory (typically one level up, or in `config/`) so updates to the core folder don't affect configuration.
+- WordPress is kept entirely within `public/wp-core/`. We do not edit any file inside this directory.
+- `wp-config.php` is moved outside of the `public/wp-core/` directory (typically one level up, or in `config/`) so updates to the core folder don't affect configuration.
 - The `index.php` in `public/` is our custom entry point, *not* the default WordPress index.php.
 
 ## Interfacing with the Backend
@@ -63,7 +63,7 @@ For optimal performance when the frontend and backend run on the same server, we
 define('WP_USE_THEMES', false);
 
 // Bootstrap WordPress Core
-require __DIR__ . '/wp/wp-blog-header.php';
+require __DIR__ . '/wp-core/wp-blog-header.php';
 
 // Now, all WP functions are available to our custom routing and controllers!
 // e.g., get_posts(), get_user_by(), wp_insert_post()

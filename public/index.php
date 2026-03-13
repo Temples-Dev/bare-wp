@@ -19,8 +19,8 @@ if (file_exists(dirname(__DIR__) . '/vendor/autoload.php')) {
     require_once dirname(__DIR__) . '/vendor/autoload.php';
 }
 
-// 4. Bootstrap WordPress Core (located in the isolated /wp/ directory)
-$wp_bootstrap_path = __DIR__ . '/wp/wp-blog-header.php';
+// 4. Bootstrap WordPress Core (located in the isolated /wp-core/ directory)
+$wp_bootstrap_path = __DIR__ . '/wp-core/wp-blog-header.php';
 if (file_exists($wp_bootstrap_path)) {
     require $wp_bootstrap_path;
 } else {

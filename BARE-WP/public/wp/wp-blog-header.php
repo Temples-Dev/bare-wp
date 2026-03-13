@@ -1,1 +1,0 @@
-<?php // mock wp core
