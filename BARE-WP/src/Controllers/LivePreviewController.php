@@ -12,6 +12,17 @@ class LivePreviewController
      */
     public function index(): void
     {
+        // Security checks: Environment and Authentication
+        if (!in_array(getenv('APP_ENV'), ['local', 'dev'])) {
+            http_response_code(403);
+            die('Access Denied: Sandbox only available in local/dev environments.');
+        }
+
+        if (!current_user_can('manage_options')) {
+            http_response_code(403);
+            die('Access Denied: Administrator privileges required.');
+        }
+
         // Serve a simple HTML page with an editor and iframe
         echo <<<HTML
 <!DOCTYPE html>
@@ -24,15 +35,14 @@ class LivePreviewController
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col md:flex-row p-4 gap-4">
     <div class="flex-1 flex flex-col bg-white p-4 rounded shadow">
-        <h2 class="text-xl font-bold mb-2">Code Editor (PHP/HTML/Tailwind)</h2>
+        <h2 class="text-xl font-bold mb-2">Code Editor (HTML/Tailwind)</h2>
         <form id="preview-form" target="preview-iframe" method="POST" action="/preview/render" class="flex-1 flex flex-col">
-            <textarea name="code" id="code-editor" class="flex-1 p-2 border rounded font-mono text-sm resize-none mb-4" placeholder="Enter your PHP/HTML/Tailwind code here...">
+            <textarea name="code" id="code-editor" class="flex-1 p-2 border rounded font-mono text-sm resize-none mb-4" placeholder="Enter your HTML/Tailwind code here...">
 &lt;div class="p-8 bg-blue-500 text-white rounded shadow-lg"&gt;
     &lt;h1 class="text-2xl font-bold"&gt;Hello from BARE-WP Sandbox!&lt;/h1&gt;
-    &lt;?php
-        echo "&lt;p class='mt-4'&gt;Dynamic PHP rendering works.&lt;/p&gt;";
-    ?&gt;
+    &lt;p class="mt-4"&gt;Dynamic UI rendering works.&lt;/p&gt;
 &lt;/div&gt;</textarea>
+            <input type="hidden" name="_csrf" value="<?php echo esc_attr(wp_create_nonce('live_preview_render')); ?>">
             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                 Render Preview
             </button>
@@ -72,7 +82,29 @@ HTML;
      */
     public function render(): void
     {
+        // Security checks: Environment and Authentication
+        if (!in_array(getenv('APP_ENV'), ['local', 'dev'])) {
+            http_response_code(403);
+            die('Access Denied');
+        }
+
+        if (!current_user_can('manage_options')) {
+            http_response_code(403);
+            die('Access Denied');
+        }
+
+        $nonce = $_POST['_csrf'] ?? '';
+        if (!wp_verify_nonce($nonce, 'live_preview_render')) {
+            http_response_code(403);
+            echo "<h1>403 Forbidden</h1>";
+            echo "<p>Invalid CSRF token.</p>";
+            return;
+        }
+
         $code = $_POST['code'] ?? '';
+        // Mitigate RCE: Strip PHP tags to prevent server-side execution
+        $code = preg_replace('/<\?php.*?\?>/is', '', $code);
+        $code = str_ireplace(['<?php', '<?', '?>'], '', $code);
 
         if (empty(trim($code))) {
             echo "<p style='color:red;'>No code provided to render.</p>";
@@ -86,7 +118,8 @@ HTML;
         }
 
         // Create a temporary file to hold the code
-        $tempFile = $previewDir . '/prev_' . uniqid() . '.php';
+        // Use .html extension to further discourage execution
+        $tempFile = $previewDir . '/prev_' . bin2hex(random_bytes(16)) . '.html';
 
         // Strip out any potentially dangerous headers or includes if necessary,
         // but since this is a local sandbox for an agent, we assume some level of trust.
@@ -109,7 +142,7 @@ HTML;
 PHP;
 
         // Write the code to the temporary file
-        file_put_contents($tempFile, $wrappedCode);
+        file_put_contents($tempFile, $wrappedCode, LOCK_EX);
 
         // Render it using our Rendering Engine
         $engine = new RenderingEngine($previewDir);

@@ -57,6 +57,12 @@ class Router
     public function dispatch(string $uri, string $method): void
     {
         $parsedUri = parse_url($uri, PHP_URL_PATH);
+
+        if ($parsedUri === null || $parsedUri === false) {
+            $this->abort(400, 'Bad Request - Malformed URI');
+            return;
+        }
+
         $method = strtoupper($method);
 
         if (!isset($this->routes[$method])) {
