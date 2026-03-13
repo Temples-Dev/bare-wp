@@ -41,6 +41,7 @@ $router->post('/preview/render', [\BareWP\Controllers\LivePreviewController::cla
 // Template Management API
 $router->get('/api/templates', [\BareWP\Controllers\TemplateController::class, 'list']);
 $router->post('/api/templates/save', [\BareWP\Controllers\TemplateController::class, 'save']);
+$router->post('/api/templates/deploy', [\BareWP\Controllers\TemplateController::class, 'deploy']);
 
 // A basic home route for testing
 $router->get('/', function() {
