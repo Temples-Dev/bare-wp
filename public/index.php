@@ -38,6 +38,10 @@ $router = new \BareWP\Router();
 $router->get('/preview', [\BareWP\Controllers\LivePreviewController::class, 'index']);
 $router->post('/preview/render', [\BareWP\Controllers\LivePreviewController::class, 'render']);
 
+// Template Management API
+$router->get('/api/templates', [\BareWP\Controllers\TemplateController::class, 'list']);
+$router->post('/api/templates/save', [\BareWP\Controllers\TemplateController::class, 'save']);
+
 // A basic home route for testing
 $router->get('/', function() {
     echo "<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'><title>BARE-WP</title><link rel='stylesheet' href='/assets/css/main.css'></head><body class='bg-gray-100 p-8'>";
