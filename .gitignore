@@ -4,4 +4,4 @@
 /.agent/
 /node_modules/
 /public/assets/css/main.css
-pnpm-debug.log
+pnpm-debug*.log
