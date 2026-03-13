@@ -59,7 +59,7 @@ The behavior of the AI Code Agent is strictly governed by the following system i
         ?>
             <div class="bg-white rounded-lg shadow-md p-6">
                 <h3 class="text-xl font-semibold mb-2"><?php echo esc_html(get_the_title(\$post)); ?></h3>
-                <p class="text-gray-600 mb-4"><?php echo wp_trim_words(get_the_excerpt(\$post), 20); ?></p>
+                <p class="text-gray-600 mb-4"><?php echo esc_html(wp_trim_words(get_the_excerpt(\$post), 20)); ?></p>
                 <a href="<?php echo esc_url(get_permalink(\$post)); ?>" class="text-blue-600 hover:text-blue-800 font-medium">Read More &rarr;</a>
             </div>
         <?php endforeach; wp_reset_postdata(); ?>

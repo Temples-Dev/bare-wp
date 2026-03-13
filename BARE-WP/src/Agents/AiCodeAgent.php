@@ -77,8 +77,13 @@ PROMPT;
         // 2. Call LLM API (e.g., OpenAI API)
         // 3. Extract the generated code from the response.
 
+        // Sanitize the prompt to safely include it in an HTML comment.
+        $sanitizedPrompt = htmlspecialchars($prompt, ENT_QUOTES, 'UTF-8');
+        // Neutralize comment delimiters to prevent comment-breaking sequences.
+        $sanitizedPrompt = str_replace(['<!--', '-->'], ['&lt;!--', '--&gt;'], $sanitizedPrompt);
+
         // Mocking the generation process...
-        $mockedResponse = "<!-- Generated based on prompt: \"{$prompt}\" -->\n";
+        $mockedResponse = "<!-- Generated based on prompt: \"{$sanitizedPrompt}\" -->\n";
         $mockedResponse .= "<div class=\"container mx-auto px-4 py-12\">\n";
         $mockedResponse .= "    <h2 class=\"text-3xl font-bold mb-8 text-gray-900\">Generated Content</h2>\n";
         $mockedResponse .= "    <div class=\"grid grid-cols-1 md:grid-cols-3 gap-6\">\n";
@@ -103,19 +108,55 @@ PROMPT;
      * Process a natural language request and save the output to a specified view file.
      *
      * @param string $prompt The natural language request
-     * @param string $destinationPath The path to save the generated code
+     * @param string $destinationPath The relative path to save the generated code within the safe base directory
+     * @param string $baseDir The safe base directory for generation (e.g., /path/to/src/Views)
      * @return bool True if successful, false otherwise
      */
-    public function buildAndSave(string $prompt, string $destinationPath): bool
+    public function buildAndSave(string $prompt, string $destinationPath, string $baseDir = __DIR__ . '/../Views'): bool
     {
+        // Remove null bytes and path traversal segments
+        $cleanDestination = str_replace(["\0", '../', '..\\'], '', $destinationPath);
+
+        // Ensure the path uses only safe characters
+        if (!preg_match('/^[a-zA-Z0-9_\-\.\/\\\\]+$/', $cleanDestination)) {
+            return false;
+        }
+
+        $fullPath = rtrim($baseDir, '/\\') . DIRECTORY_SEPARATOR . ltrim($cleanDestination, '/\\');
+
         $code = $this->generateCode($prompt);
 
         // Ensure directory exists
-        $dir = dirname($destinationPath);
+        $dir = dirname($fullPath);
         if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
+            if (!mkdir($dir, 0755, true) && !is_dir($dir)) {
+                return false;
+            }
         }
 
-        return file_put_contents($destinationPath, $code) !== false;
+        // Validate that the resolved canonical path is still within the base directory
+        $realBaseDir = realpath($baseDir);
+        $realDir = realpath($dir);
+        if ($realBaseDir === false || $realDir === false || strpos($realDir, $realBaseDir) !== 0) {
+            return false;
+        }
+
+        // Atomic write: write to temp file then rename
+        $tempFile = tempnam($dir, 'ai_code_');
+        if ($tempFile === false) {
+            return false;
+        }
+
+        if (file_put_contents($tempFile, $code) === false) {
+            unlink($tempFile);
+            return false;
+        }
+
+        if (!rename($tempFile, $fullPath)) {
+            unlink($tempFile);
+            return false;
+        }
+
+        return true;
     }
 }

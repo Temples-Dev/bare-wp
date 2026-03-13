@@ -102,7 +102,7 @@ class ContactController
         // Option A: Send Email
         $to = get_option('admin_email');
         $subject = 'New Contact Submission from ' . $name;
-        $body = "Name: \$name\n\nMessage:\n\$message";
+        $body = "Name: $name\n\nMessage:\n$message";
         $headers = ['Content-Type: text/plain; charset=UTF-8'];
 
         wp_mail($to, $subject, $body, $headers);
