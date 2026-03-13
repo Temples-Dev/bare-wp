@@ -31,17 +31,25 @@ if (file_exists($wp_bootstrap_path)) {
 }
 
 // 5. Initialize the Custom PHP UI Application
-// Here you would instantiate your Router, Controllers, and Views.
-// For demonstration, we simply output a confirmation that WP is loaded.
-echo "<h1>BARE-WP Initialization</h1>";
-echo "<p>WordPress Core is loaded headlessly. Themes are bypassed.</p>";
+// Set up the custom routing engine.
+$router = new \BareWP\Router();
 
-// Example of directly accessing the WP internal API:
-if (function_exists('get_bloginfo')) {
-    echo "<p>Connected to backend: <strong>" . esc_html(get_bloginfo('name')) . "</strong></p>";
-} else {
-    echo "<p>Failed to load WP functions.</p>";
-}
+// Register the preview endpoints
+$router->get('/preview', [\BareWP\Controllers\LivePreviewController::class, 'index']);
+$router->post('/preview/render', [\BareWP\Controllers\LivePreviewController::class, 'render']);
+
+// A basic home route for testing
+$router->get('/', function() {
+    echo "<h1>BARE-WP Frontend Engine</h1>";
+    echo "<p>WordPress Core is loaded headlessly. Themes are bypassed.</p>";
+    if (function_exists('get_bloginfo')) {
+        echo "<p>Connected to backend: <strong>" . esc_html(get_bloginfo('name')) . "</strong></p>";
+    }
+    echo "<p><a href='/preview'>Go to Live Preview Sandbox</a></p>";
+});
 
 // Proceed to route the incoming HTTP request...
-// \BareWP\Router::dispatch($_SERVER['REQUEST_URI']);
+$requestUri = $_SERVER['REQUEST_URI'] ?? '/';
+$requestMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+$router->dispatch($requestUri, $requestMethod);
