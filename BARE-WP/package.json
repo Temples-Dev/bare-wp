@@ -1,0 +1,19 @@
+{
+  "name": "bare-wp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "tailwind.config.js",
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/assets/css/input.css -o ./public/assets/css/app.css",
+    "watch:css": "tailwindcss -i ./src/assets/css/input.css -o ./public/assets/css/app.css --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "autoprefixer": "^10.4.27",
+    "postcss": "^8.5.8",
+    "tailwindcss": "3.4"
+  }
+}

@@ -20,7 +20,7 @@ class LivePreviewController
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BARE-WP Live Preview Sandbox</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/css/app.css">
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col md:flex-row p-4 gap-4">
     <div class="flex-1 flex flex-col bg-white p-4 rounded shadow">
@@ -72,6 +72,14 @@ HTML;
      */
     public function render(): void
     {
+        // SECURITY: Restrict sandbox access to localhost to prevent RCE
+        $remoteAddress = $_SERVER['REMOTE_ADDR'] ?? '';
+        if (!in_array($remoteAddress, ['127.0.0.1', '::1'])) {
+            http_response_code(403);
+            echo "<p style='color:red;'>Access Denied: Sandbox only available locally.</p>";
+            return;
+        }
+
         $code = $_POST['code'] ?? '';
 
         if (empty(trim($code))) {
@@ -85,12 +93,13 @@ HTML;
             mkdir($previewDir, 0755, true);
         }
 
-        // Create a temporary file to hold the code
-        $tempFile = $previewDir . '/prev_' . uniqid() . '.php';
+        // Create a fixed file for live preview to hold the code
+        // This makes it easier for the Tailwind JIT watcher to pick up changes
+        // without constantly tracking new temporary files, and avoids race conditions.
+        $tempFile = $previewDir . '/live.php';
 
         // Strip out any potentially dangerous headers or includes if necessary,
         // but since this is a local sandbox for an agent, we assume some level of trust.
-        // The script is written atomically to avoid race conditions.
 
         // Wrap the code to include Tailwind in the preview output head
         $wrappedCode = <<<PHP
@@ -100,7 +109,7 @@ HTML;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Preview Render</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/css/app.css">
 </head>
 <body>
     {$code}
@@ -108,8 +117,18 @@ HTML;
 </html>
 PHP;
 
-        // Write the code to the temporary file
-        file_put_contents($tempFile, $wrappedCode);
+        // Write the code to the live preview file atomically
+        $tempWriteFile = $previewDir . '/live_temp.php';
+        file_put_contents($tempWriteFile, $wrappedCode);
+        rename($tempWriteFile, $tempFile);
+
+        // Trigger synchronous Tailwind JIT Compilation
+        $baseDir = dirname(__DIR__, 2);
+        // Using npm run build:css synchronously prevents a race condition
+        // where the preview renders before the CSS is updated.
+        // We use npx tailwindcss directly to avoid npm overhead and ensure it works
+        $cmd = escapeshellcmd("cd {$baseDir} && npx tailwindcss -i ./src/assets/css/input.css -o ./public/assets/css/app.css");
+        shell_exec($cmd . ' 2>&1');
 
         // Render it using our Rendering Engine
         $engine = new RenderingEngine($previewDir);
@@ -123,11 +142,6 @@ PHP;
             echo "<div style='color: red; padding: 20px; border: 1px solid red; background: #fee;'>";
             echo "<strong>Rendering Error:</strong> " . htmlspecialchars($e->getMessage());
             echo "</div>";
-        } finally {
-            // Always clean up the temporary file
-            if (file_exists($tempFile)) {
-                unlink($tempFile);
-            }
         }
     }
 }

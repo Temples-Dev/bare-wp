@@ -30,7 +30,22 @@ if (file_exists($wp_bootstrap_path)) {
     die('Service Unavailable.');
 }
 
-// 5. Initialize the Custom PHP UI Application
+// 5. Provide basic static file routing for the PHP built-in server
+// In production, Nginx/Apache should handle static files (like CSS, JS, images).
+if (php_sapi_name() === 'cli-server') {
+    $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    $staticFilePath = __DIR__ . $requestUri;
+
+    if (is_file($staticFilePath) && file_exists($staticFilePath)) {
+        // Explicitly set the MIME type for CSS files
+        if (pathinfo($staticFilePath, PATHINFO_EXTENSION) === 'css') {
+            header('Content-Type: text/css');
+        }
+        return false; // Let the built-in server serve the file natively
+    }
+}
+
+// 6. Initialize the Custom PHP UI Application
 // Set up the custom routing engine.
 $router = new \BareWP\Router();
 
