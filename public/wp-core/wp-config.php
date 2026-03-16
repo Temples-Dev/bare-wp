@@ -48,6 +48,8 @@ define('PLUGINS_COOKIE_PATH', '/');
  */
 define( 'WP_HOME', 'http://localhost:8080' );
 define( 'WP_SITEURL', 'http://localhost:8080/wp-core' );
+define( 'FORCE_SSL_ADMIN', false );
+define( 'FORCE_SSL_LOGIN', false );
 
 /**
  * WordPress database table prefix.
