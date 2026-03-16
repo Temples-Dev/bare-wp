@@ -48,7 +48,6 @@ define('PLUGINS_COOKIE_PATH', '/');
  */
 define( 'WP_HOME', 'http://localhost:8080' );
 define( 'WP_SITEURL', 'http://localhost:8080/wp-core' );
-define( 'SECURE_AUTH_COOKIE', false );
 
 /**
  * WordPress database table prefix.
@@ -60,7 +59,7 @@ $table_prefix = 'wp_';
  */
 define('WP_DEBUG', true);
 define('WP_DEBUG_LOG', true);
-define('WP_DEBUG_DISPLAY', false);
+define('WP_DEBUG_DISPLAY', true);
 
 /* Add any custom values between this line and the "stop editing" line. */
 
